@@ -4,13 +4,8 @@ warnings.filterwarnings('ignore')
 
 from model.model import Summarizer
 from modules.dataset import get_train_loaders
-from modules.trainer import Trainer
-from modules.utils import get_logger, make_directory, get_train_config, seed_everything, save_json
-from modules.criterion import create_criterion
-from modules.optimizer import create_optimizer
-from modules.scheduler import create_scheduler
+from modules.utils import get_logger, make_directory, seed_everything, save_json
 from modules.earlystoppers import LossEarlyStopper
-from modules.metrics import Hitrate
 from modules.recorders import PerformanceRecorder
 
 import wandb

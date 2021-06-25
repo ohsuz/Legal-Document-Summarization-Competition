@@ -4,12 +4,12 @@
 import torch
 import wandb
 import os
-from .dataset import get_train_dataloaders
+from .dataset import get_train_loaders
 from .optimizer import get_optimizer
 from .scheduler import get_scheduler
 from .criterion import get_criterion
 from .metric import get_metric
-from .model import *
+from .model import Summarizer
 
 
 def get_model(args):

@@ -10,7 +10,6 @@ from sklearn.model_selection import train_test_split
 from pprint import pprint
 
 
-
 class CustomDataset(Dataset):
     def __init__(self, args, data, mode):
         self.data = data
