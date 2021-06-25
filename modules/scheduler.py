@@ -1,32 +1,19 @@
-import math
-import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, StepLR, OneCycleLR
+from transformers import get_linear_schedule_with_warmup
 
 
-# name과 scheduler class를 묶는 entrypoint
-_scheduler_entrypoints = {
-    'StepLR': torch.optim.lr_scheduler.StepLR,
-    'OneCycleLR': torch.optim.lr_scheduler.OneCycleLR,
-    'ReduceLROnPlateau': torch.optim.lr_scheduler.ReduceLROnPlateau,
-}
-
-
-# scheduler 이름을 가지는 class return
-def scheduler_entrypoint(scheduler_name):
-    return _scheduler_entrypoints[scheduler_name]
-
-
-# scheduler list에 전달된 이름이 존재하는지 판단
-def is_scheduler(scheduler_name):
-    return scheduler_name in _scheduler_entrypoints
-
-
-def create_scheduler(scheduler_name, **kwargs):
-    # 정의한 scheduler list내에 이름이 있으면
-    if is_scheduler(scheduler_name):
-        create_fn = scheduler_entrypoint(scheduler_name) # class를 가져와서
-        scheduler = create_fn(**kwargs) # 전달된 인자를 사용해 선언
+def get_scheduler(optimizer, args):
+    if args.scheduler == 'plateau':
+        scheduler = ReduceLROnPlateau(optimizer, patience=10, factor=0.5, mode='max', verbose=True)
+    elif args.scheduler == 'linear_warmup':
+        scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                    num_warmup_steps=args.warmup_steps,
+                                                    num_training_steps=args.total_steps)
+    elif args.scheduler == 'cosine':
+        scheduler = CosineAnnealingLR(optimizer, T_max=20, eta_min=0)
+    elif args.scheduler == 'step':
+        scheduler = StepLR(optimizer)
+    elif args.scheduler == 'onecycle':
+        scheduler = OneCycleLR(optimizer)
         
-    else:
-        raise RuntimeError('Unknown scheduler (%s)' % scheduler_name) # 없을 시, Error raise
-        
-    return scheduler # defined scheduler return
+    return scheduler

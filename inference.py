@@ -1,0 +1,101 @@
+import warnings
+warnings.filterwarnings('ignore')
+
+from modules.dataset import CustomDataset
+from modules.utils import seed_everything, get_test_config
+from args import parse_args
+from model.model import *
+
+import torch
+from torch.utils.data import DataLoader
+import numpy as np
+import pandas as pd
+
+from importlib import import_module
+import os
+import random
+import json
+import argparse
+
+
+def get_model(args):
+    """
+    Load model and move tensors to a given devices.
+    """
+    if args.model == 'base': model = Summarizer(args)
+
+    model.to(args.device)
+
+    return model
+
+
+def load_model(args):
+    model_path = os.path.join(args.model_dir, args.model_name)
+    load_state = torch.load(model_path)
+    model = get_model(args)
+
+    model.load_state_dict(load_state['state_dict'], strict=True)
+    
+    print("Loading Model from:", model_path, "...Finished.")
+    return model
+
+
+def main(args):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = device
+    
+    # check pytorch version & whether using cuda or not
+    print(f"PyTorch version:[{torch.__version__}]")
+    print(f"device:[{args.device}]")
+    print(f"GPU 이름: {torch.cuda.get_device_name(0)}")
+    
+    # Set random seed
+    seed_everything(args.seed)
+    
+    # Get data from json
+    with open(os.path.join(args.data_dir, "test.json"), "r", encoding="utf-8-sig") as f:
+        data = pd.read_json(f) 
+    test_df = pd.DataFrame(data)
+    
+    # Load dataset & dataloader
+    test_dataset = CustomDataset(test_df, data_dir=args.data_dir, mode='test')
+    test_dataloader = DataLoader(dataset=test_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.num_workers,
+                                 pin_memory=True,
+                                 drop_last=False,
+                                 shuffle=False)
+    
+    # Load Model
+    model = load_model(args)
+    
+    # make predictions
+    model.eval()
+    pred_lst = []
+    
+    with torch.no_grad():
+        for batch_index, data in enumerate(test_dataloader):
+            src = data[0].to(CFG.device)
+            clss = data[1].to(CFG.device)
+            segs = data[2].to(CFG.device)
+            mask = data[3].to(CFG.device)
+            mask_clss = data[4].to(CFG.device)
+
+            sent_score = model(src, segs, clss, mask, mask_clss)
+            pred_lst.extend(torch.topk(sent_score, 3, axis=1).indices.tolist())
+        
+    with open(os.path.join(args.submission_dir, "sample_submission.json"), "r", encoding="utf-8-sig") as f:
+        sample_submission = json.load(f)
+    
+    for row, pred in zip(sample_submission, pred_lst):
+        row['summary_index1'] = pred[0]
+        row['summary_index2'] = pred[1]
+        row['summary_index3'] = pred[2]
+    
+    with open(os.path.join(args.submission_dir, args.submission_name), "w") as f:
+        json.dump(sample_submission, f, separators=(',', ':'))
+
+        
+if __name__ == '__main__':
+    args = parse_args(mode='train')
+    main(args)

@@ -4,22 +4,17 @@ import torch
 from torch import nn
 import transformers
 from sklearn.metrics import f1_score
-from transformers import AutoConfig, AutoModel
+
 
 
 class Summarizer(nn.Module):
 
-    def __init__(self, args):
+    def __init__(self):
         """
         """
         super(Summarizer, self).__init__()
-        self.args = args
-        self.device = args.device
-        self.hidden_dim = self.args.hidden_dim
-        self.n_layers = self.args.n_layers
-        
-        self.encoder = AutoModel.from_config(self.args.model_name)
-        self.fc = nn.Linear(self.hidden_dim, 1)
+        self.encoder = transformers.BertModel.from_pretrained("beomi/KcELECTRA-base")
+        self.fc = nn.Linear(768, 1)
         self.sigmoid = nn.Sigmoid()
 
 
