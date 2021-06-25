@@ -17,7 +17,8 @@ class Summarizer(nn.Module):
         self.hidden_dim = self.args.hidden_dim
         self.n_layers = self.args.n_layers
         
-        self.encoder = AutoModel.from_config(self.args.model_name)
+        self.config = AutoConfig.from_pretrained("klue/bert-base")
+        self.encoder = AutoModel.from_config(self.config)
         self.fc = nn.Linear(self.hidden_dim, 1)
         self.sigmoid = nn.Sigmoid()
 

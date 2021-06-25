@@ -2,7 +2,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-from model.model import Summarizer
+from modules.model import Summarizer
 from modules.dataset import get_train_loaders
 from modules.utils import get_logger, make_directory, seed_everything, save_json
 from modules.earlystoppers import LossEarlyStopper

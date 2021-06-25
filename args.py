@@ -21,13 +21,13 @@ def parse_args(mode='train'):
     parser.add_argument('--run_name', default='suz', type=str, help='wandb run name')    
     
     # Model Setting
-    parser.add_argument('--model', default='Summarizer', type=str, help='model type')
-    parser.add_argument('--model_name', default='beomi/KcELECTRA-base', type=str, help='pretrained model name')
+    parser.add_argument('--model', default='base', type=str, help='model type')
+    parser.add_argument('--model_name', default='klue/bert-base', type=str, help='pretrained model name')
     parser.add_argument('--optimizer', default='adamW', type=str, help='optimizer type')
     parser.add_argument('--scheduler', default='cosine', type=str, help='scheduler type')
     parser.add_argument('--max_seq_len', default=10, type=int, help='max sequence length')
     parser.add_argument('--num_workers', default=4, type=int, help='number of workers')
-    parser.add_argument('--hidden_dim', default=512, type=int, help='hidden dimension size')
+    parser.add_argument('--hidden_dim', default=768, type=int, help='hidden dimension size')
     parser.add_argument('--n_layers', default=3, type=int, help='number of layers')
     parser.add_argument('--n_heads', default=4, type=int, help='number of heads')
     parser.add_argument('--drop_out', default=0.5, type=float, help='drop out rate')
@@ -35,7 +35,7 @@ def parse_args(mode='train'):
     
     # Trainer Setting
     parser.add_argument('--n_epochs', default=5, type=int, help='number of epochs')
-    parser.add_argument('--batch_size', default=64, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=32, type=int, help='batch size')
     parser.add_argument('--lr', default=0.0001, type=float, help='learning rate')
     parser.add_argument('--clip_grad', default=10, type=int, help='clip grad')
     parser.add_argument('--patience', default=30, type=int, help='for early stopping')

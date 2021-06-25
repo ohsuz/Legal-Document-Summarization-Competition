@@ -13,6 +13,7 @@ from .model import Summarizer
 
 
 def get_model(args):
+    model = None
     if args.model == 'base': model = Summarizer(args)
 
     model.to(args.device)
@@ -78,7 +79,7 @@ def run(args):
 
         # scheduler
         if args.scheduler == 'plateau':
-            scheduler.step(best_auc)
+            scheduler.step(best_score)
         else:
             scheduler.step()
 
@@ -100,7 +101,7 @@ def train(train_loader, model, optimizer, args):
         sent_score = model(src, segs, clss, mask, mask_clss)
 
         # compute loss
-        loss = get_criterion(sent_score, target)
+        loss = get_criterion(sent_score, target, args)
         loss = (loss * mask_clss.float()).sum()
         train_total_loss += loss
 
@@ -143,7 +144,7 @@ def validate(val_loader, model, args):
             target = target.float().to(args.device)
 
             sent_score = model(src, segs, clss, mask, mask_clss)
-            loss = get_criterion(sent_score, target)
+            loss = get_criterion(sent_score, target, args)
             loss = (loss * mask_clss.float()).sum()
             val_total_loss += loss
 

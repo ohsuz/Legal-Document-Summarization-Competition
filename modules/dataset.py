@@ -5,6 +5,7 @@ import modules.utils as utils
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 from itertools import chain
+from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 
@@ -21,16 +22,15 @@ class CustomDataset(Dataset):
 
     def data_loader(self):
         print('Loading ' + self.mode + ' dataset..')
-        if os.path.isfile(os.path.join(self.data_dir, self.mode, self.mode + '_X.pt')):
-            inputs = torch.load(os.path.join(self.data_dir, self.mode, self.mode + '_X.pt'))
-            labels = torch.load(os.path.join(self.data_dir, self.mode, self.mode + '_Y.pt'))
+        if os.path.isfile(os.path.join(self.data_dir, self.mode + '_X.pt')):
+            inputs = torch.load(os.path.join(self.data_dir, self.mode + '_X.pt'))
+            labels = torch.load(os.path.join(self.data_dir, self.mode + '_Y.pt'))
 
         else:
             df = self.data
             inputs = pd.DataFrame(columns=['src'])
             labels = pd.DataFrame(columns=['trg'])
             inputs['src'] =  df['article_original']
-            print(inputs['src'])
 
             if self.mode != "test":
                 labels['trg'] =  df['extractive']
@@ -40,8 +40,8 @@ class CustomDataset(Dataset):
             print("preprocessing")
 
             # Save data
-            torch.save(inputs, os.path.join(self.data_dir, self.mode, self.mode + '_X.pt'))
-            torch.save(labels, os.path.join(self.data_dir, self.mode, self.mode + '_Y.pt'))
+            torch.save(inputs, os.path.join(self.data_dir, self.mode + '_X.pt'))
+            torch.save(labels, os.path.join(self.data_dir, self.mode + '_Y.pt'))
 
         inputs = inputs.values
         labels = labels.values
@@ -49,7 +49,7 @@ class CustomDataset(Dataset):
         return inputs, labels
 
     def pad(self, data, pad_id, max_len):
-        padded_data = data.map(lambda x : torch.cat([x, torch.tensor([pad_id] * (max_len - len(x)))]))
+        padded_data = data.map(lambda x : torch.cat([x, torch.tensor([pad_id] * (max_len - len(x)), dtype=torch.int64)]))
         return padded_data
 
     def preprocessing(self, inputs, labels):
