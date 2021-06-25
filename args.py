@@ -36,9 +36,9 @@ def parse_args(mode='train'):
     # Trainer Setting
     parser.add_argument('--n_epochs', default=5, type=int, help='number of epochs')
     parser.add_argument('--batch_size', default=32, type=int, help='batch size')
-    parser.add_argument('--lr', default=0.0001, type=float, help='learning rate')
+    parser.add_argument('--lr', default=5e-4, type=float, help='learning rate')
     parser.add_argument('--clip_grad', default=10, type=int, help='clip grad')
-    parser.add_argument('--patience', default=30, type=int, help='for early stopping')
+    parser.add_argument('--patience', default=5, type=int, help='for early stopping')
 
     # ETC
     parser.add_argument('--log_steps', default=50, type=int, help='print log per n steps')

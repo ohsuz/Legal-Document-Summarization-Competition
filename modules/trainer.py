@@ -48,13 +48,14 @@ def run(args):
     optimizer = get_optimizer(model, args)
     scheduler = get_scheduler(optimizer, args)
     
+    best_score = -1
     early_stopping_counter = 0
   
     for epoch in range(args.n_epochs):
         print(f"Start Training: Epoch {epoch + 1}")
         
         train_loss, train_score = train(train_loader, model, optimizer, args)
-        val_loss, val_score = validate(valid_loader, model, args)
+        val_loss, val_score = validate(val_loader, model, args)
 
         wandb.log({"epoch": epoch, 
                    "train_loss": train_loss, "train_score": train_score,
