@@ -3,7 +3,7 @@ warnings.filterwarnings('ignore')
 
 
 from model.model import Summarizer
-from modules.dataset import CustomDataset
+from modules.dataset import get_train_loaders
 from modules.trainer import Trainer
 from modules.utils import get_logger, make_directory, get_train_config, seed_everything, save_json
 from modules.criterion import create_criterion
@@ -12,6 +12,7 @@ from modules.scheduler import create_scheduler
 from modules.earlystoppers import LossEarlyStopper
 from modules.metrics import Hitrate
 from modules.recorders import PerformanceRecorder
+from args import parse_args
 
 import torch
 import torch.optim as optim
@@ -26,56 +27,6 @@ import os
 import json
 import random
 import argparse
-
-
-class CFG:
-    # Project Environment
-    PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-    DATA_DIR = os.path.join(PROJECT_DIR, 'data')
-
-    # TRAIN SERIAL
-    KST = timezone(timedelta(hours=9))
-    TRAIN_TIMESTAMP = datetime.now(tz=KST).strftime("%Y%m%d%H%M%S")
-
-    # DEVICE
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-
-def get_data_utils():
-    """
-        define train/validation pytorch dataset & loader
-
-        Returns:
-            train_loader: pytorch data loader for train data
-            val_loader: pytorch data loader for validation data
-    """
-    # get data from json
-    with open(os.path.join(CFG.DATA_DIR, "train.json"), "r", encoding="utf-8-sig") as f:
-        data = pd.read_json(f) 
-    train_df = pd.DataFrame(data)
-
-    # split train & test data
-    train_data, valid_data = train_test_split(train_df, test_size=0.1, random_state=CFG.seed)
-
-    # get train & valid dataset from dataset.py
-    train_dataset = CustomDataset(train_data, data_dir=CFG.DATA_DIR, mode='train')
-    validation_dataset = CustomDataset(valid_data, data_dir=CFG.DATA_DIR, mode='valid')
-
-    # define data loader based on each dataset
-    train_dataloader = DataLoader(dataset=train_dataset,
-                                  batch_size=CFG.batch_size,
-                                  num_workers=CFG.num_workers,
-                                  pin_memory=CFG.pin_memory,
-                                  drop_last=CFG.drop_last,
-                                  shuffle=True)
-    validation_dataloader = DataLoader(dataset=validation_dataset,
-                                       batch_size=CFG.batch_size,
-                                       num_workers=CFG.num_workers,
-                                       pin_memory=CFG.pin_memory,
-                                       drop_last=CFG.drop_last,
-                                       shuffle=False)
-
-    return train_dataloader, validation_dataloader
 
 
 def get_model(train_dataloader):
@@ -179,7 +130,7 @@ def train(model, optimizer, scheduler, criterion, train_dataloader, validation_d
             performance_recorder.save_weight()
 
 
-def main():
+def main(args):
     # check pytorch version & whether using cuda or not
     print(f"PyTorch version:[{torch.__version__}]")
     print(f"device:[{CFG.device}]")
@@ -218,4 +169,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args(mode='train')
+    main(args)

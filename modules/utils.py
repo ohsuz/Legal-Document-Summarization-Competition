@@ -17,69 +17,6 @@ import torch
 import logging
 
 
-def get_train_config(CFG, config):
-    '''
-        train config file parser
-    '''
-
-    with open(config) as f:
-        config = json.load(f)
-    
-    # SEED
-    CFG.seed = config["SEED"]["seed"]
-
-    # DATALOADER
-    CFG.num_workers = config["DATALOADER"]["num_workers"]
-    CFG.pin_memory = config["DATALOADER"]["pin_memory"]
-    CFG.drop_last = config["DATALOADER"]["drop_last"]
-
-    # TRAIN
-    CFG.epochs = config['TRAIN']['epochs']
-    CFG.batch_size = config['TRAIN']['batch_size']
-    CFG.learning_rate = config['TRAIN']['learning_rate']
-    CFG.early_stopping_patience = config['TRAIN']['early_stopping_patience']
-    CFG.model = config['TRAIN']['model']
-    CFG.optimizer = config["TRAIN"]["optimizer"]
-    CFG.optimizer_params = config["TRAIN"]["optimizer_params"]
-    CFG.scheduler = config["TRAIN"]["scheduler"]
-    CFG.scheduler_params = config["TRAIN"]["scheduler_params"]
-    CFG.criterion = config["TRAIN"]["criterion"]
-    CFG.criterion_params = config["TRAIN"]["criterion_params"]
-
-    # PERFORMANCE RECORD
-    CFG.DEBUG = config['PERFORMANCE_RECORD']['DEBUG']
-    CFG.PERFORMANCE_RECORD_COLUMN_NAME_LIST = config['PERFORMANCE_RECORD']['column_list']
-    CFG.TRAIN_SERIAL = f'{CFG.TRAIN_TIMESTAMP}' if CFG.DEBUG is not True else 'DEBUG'
-    CFG.PERFORMANCE_RECORD_DIR = os.path.join(CFG.PROJECT_DIR, 'results', 'train', CFG.TRAIN_SERIAL)
-
-    # pprint.pprint(CFG.__dict__)
-
-
-def get_test_config(CFG, config):
-    '''
-        train config file parser
-    '''
-
-    with open(config) as f:
-        config = json.load(f)
-    
-    # SEED
-    CFG.seed = config["SEED"]["seed"]
-
-    # DATALOADER
-    CFG.num_workers = config["DATALOADER"]["num_workers"]
-    CFG.pin_memory = config["DATALOADER"]["pin_memory"]
-    CFG.drop_last = config["DATALOADER"]["drop_last"]
-
-    # PREDICT
-    CFG.train_serial = config['PREDICT']['train_serial']
-    CFG.model = config['PREDICT']['model']
-    CFG.batch_size = config['PREDICT']['batch_size']
-
-    # set trained model path
-    CFG.TRAINED_MODEL_PATH = os.path.join(CFG.PROJECT_DIR, 'results', 'train', CFG.train_serial, 'best.pt')
-
-
 def seed_everything(seed):
     np.random.seed(seed)
     random.seed(seed)

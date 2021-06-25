@@ -5,18 +5,18 @@ import modules.utils as utils
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 from itertools import chain
+from sklearn.model_selection import train_test_split
 
 from pprint import pprint
 
 
 
-
 class CustomDataset(Dataset):
-    def __init__(self, data, data_dir, mode):
+    def __init__(self, args, data, mode):
         self.data = data
-        self.data_dir = data_dir
+        self.data_dir = args.data_dir
         self.mode = mode
-        self.tokenizer = AutoTokenizer.from_pretrained("beomi/KcELECTRA-base")
+        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         self.inputs, self.labels = self.data_loader()
 
     def data_loader(self):
@@ -88,5 +88,56 @@ class CustomDataset(Dataset):
             return [self.inputs[index][i] for i in range(5)], self.labels[index]
 
 
+def get_train_loaders(args):
+    """
+        define train/validation pytorch dataset & loader
 
+        Returns:
+            train_loader: pytorch data loader for train data
+            val_loader: pytorch data loader for validation data
+    """
+    # get data from json
+    with open(os.path.join(args.data_dir, "train.json"), "r", encoding="utf-8-sig") as f:
+        data = pd.read_json(f) 
+    train_df = pd.DataFrame(data)
+    
+    # split train & test data
+    train_data, val_data = train_test_split(train_df, test_size=0.1, random_state=args.seed)
+    
+    # get train & valid dataset from dataset.py
+    train_dataset = CustomDataset(args, train_data, mode='train')
+    val_dataset = CustomDataset(args, val_data, mode='valid')
 
+    # define data loader based on each dataset
+    train_dataloader = DataLoader(dataset=train_dataset,
+                                  batch_size=args.batch_size,
+                                  num_workers=args.num_workers,
+                                  pin_memory=True,
+                                  drop_last=False,
+                                  shuffle=True)
+    val_dataloader = DataLoader(dataset=val_dataset,
+                                batch_size=args.batch_size,
+                                num_workers=args.num_workers,
+                                pin_memory=True,
+                                drop_last=False,
+                                shuffle=False)
+
+    return train_dataloader, val_dataloader
+    
+    
+def get_test_loader(args):
+    # Get data from json
+    with open(os.path.join(args.data_dir, "test.json"), "r", encoding="utf-8-sig") as f:
+        data = pd.read_json(f) 
+    test_df = pd.DataFrame(data)
+    
+    # Load dataset & dataloader
+    test_dataset = CustomDataset(args, test_df, mode='test')
+    test_dataloader = DataLoader(dataset=test_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=args.num_workers,
+                                 pin_memory=True,
+                                 drop_last=False,
+                                 shuffle=False)
+    
+    return test_dataloader

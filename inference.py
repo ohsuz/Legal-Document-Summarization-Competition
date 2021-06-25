@@ -1,8 +1,9 @@
 import warnings
 warnings.filterwarnings('ignore')
 
-from modules.dataset import CustomDataset
+from modules.dataset import get_test_loader
 from modules.utils import seed_everything, get_test_config
+from modules.trainer import get_model
 from args import parse_args
 from model.model import *
 
@@ -16,17 +17,6 @@ import os
 import random
 import json
 import argparse
-
-
-def get_model(args):
-    """
-    Load model and move tensors to a given devices.
-    """
-    if args.model == 'base': model = Summarizer(args)
-
-    model.to(args.device)
-
-    return model
 
 
 def load_model(args):
@@ -43,33 +33,15 @@ def load_model(args):
 def main(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
+    seed_everything(args.seed)
     
     # check pytorch version & whether using cuda or not
     print(f"PyTorch version:[{torch.__version__}]")
     print(f"device:[{args.device}]")
     print(f"GPU 이름: {torch.cuda.get_device_name(0)}")
     
-    # Set random seed
-    seed_everything(args.seed)
-    
-    # Get data from json
-    with open(os.path.join(args.data_dir, "test.json"), "r", encoding="utf-8-sig") as f:
-        data = pd.read_json(f) 
-    test_df = pd.DataFrame(data)
-    
-    # Load dataset & dataloader
-    test_dataset = CustomDataset(test_df, data_dir=args.data_dir, mode='test')
-    test_dataloader = DataLoader(dataset=test_dataset,
-                                 batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
-                                 pin_memory=True,
-                                 drop_last=False,
-                                 shuffle=False)
-    
-    # Load Model
+    test_loader = get_test_loader(args)
     model = load_model(args)
-    
-    # make predictions
     model.eval()
     pred_lst = []
     

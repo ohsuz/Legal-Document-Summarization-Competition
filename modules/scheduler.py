@@ -14,6 +14,6 @@ def get_scheduler(optimizer, args):
     elif args.scheduler == 'step':
         scheduler = StepLR(optimizer)
     elif args.scheduler == 'onecycle':
-        scheduler = OneCycleLR(optimizer)
+        scheduler = OneCycleLR(optimizer, step_size=5, gamma:0.95)
         
     return scheduler
