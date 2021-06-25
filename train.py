@@ -25,6 +25,7 @@ import os
 import json
 import random
 import argparse
+from sklearn.model_selection import KFold
 
 
 
@@ -38,9 +39,16 @@ def main(args):
     print(f"device:[{args.device}]")
     print(f"GPU 이름: {torch.cuda.get_device_name(0)}")
 
-    wandb.init(project='AI-Online-Competition', config=vars(args), entity="ohsuz", name=args.run_name)
-    trainer.run(args)
-    wandb.finish()
+    if args.train_kfold:
+        for i in range(5):
+            args.fold = i
+            wandb.init(project='AI-Online-Competition', config=vars(args), entity="ohsuz", name=f"{args.run_name}_{fold}")
+            trainer.run(args)
+            wandb.finish()
+    else:
+        wandb.init(project='AI-Online-Competition', config=vars(args), entity="ohsuz", name=args.run_name)
+        trainer.run(args)
+        wandb.finish()
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 from itertools import chain
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 from pprint import pprint
 
@@ -29,6 +30,7 @@ class CustomDataset(Dataset):
             inputs = pd.DataFrame(columns=['src'])
             labels = pd.DataFrame(columns=['trg'])
             inputs['src'] =  df['article_original']
+            print(inputs['src'])
 
             if self.mode != "test":
                 labels['trg'] =  df['extractive']
@@ -100,8 +102,15 @@ def get_train_loaders(args):
         data = pd.read_json(f) 
     train_df = pd.DataFrame(data)
     
-    # split train & test data
-    train_data, val_data = train_test_split(train_df, test_size=0.1, random_state=args.seed)
+    if args.train_kfold:
+        kf = KFold(n_splits=5)
+        indices = kf.split(train_df)
+        train_idx, val_idx = indices[args.fold]
+        train_data = train_df[train_idx]
+        val_data = train_df[val_idx]
+        
+    else:
+        train_data, val_data = train_test_split(train_df, test_size=0.2, random_state=args.seed)
     
     # get train & valid dataset from dataset.py
     train_dataset = CustomDataset(args, train_data, mode='train')

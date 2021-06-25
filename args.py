@@ -11,7 +11,6 @@ def parse_args(mode='train'):
     # Directory Setting
     parser.add_argument('--data_dir', default='/opt/ml/Legal-Document-Summarization/data', type=str, help='data directory')
     parser.add_argument('--model_dir', default='/opt/ml/Legal-Document-Summarization/model', type=str, help='model directory')
-    parser.add_argument('--output_dir', default='/opt/ml/Legal-Document-Summarization/output', type=str, help='output directory')
     parser.add_argument('--submission_dir', default='/opt/ml/Legal-Document-Summarization/submission', type=str, help='submission directory')
                     
     # Name Setting
@@ -44,7 +43,8 @@ def parse_args(mode='train'):
     # ETC
     parser.add_argument('--log_steps', default=50, type=int, help='print log per n steps')
     parser.add_argument('--fold', default=0, type=int, help='fold number')
-    parser.add_argument('--kfold', default=False, type=bool, help='Inference with kfold or not')
+    parser.add_argument('--train_kfold', default=False, type=bool, help='train with kfold')
+    parser.add_argument('--inference_kfold', default=False, type=bool, help='inference with kfold')
     
     args = parser.parse_args()
 
