@@ -12,7 +12,10 @@ from modules.scheduler import create_scheduler
 from modules.earlystoppers import LossEarlyStopper
 from modules.metrics import Hitrate
 from modules.recorders import PerformanceRecorder
+
+import wandb
 from args import parse_args
+from modules import trainer
 
 import torch
 import torch.optim as optim
@@ -29,51 +32,28 @@ import random
 import argparse
 
 
-def get_model(train_dataloader):
-    '''
-        get defined model from model.py
-        
-        Returns:
-            model: pytorch model that would be trained
-            optimizer: pytorch optimizer for gradient descent
-            scheduler: pytorch lr scheduler
-            criterion: loss function
-    '''
 
-    # Load Model
-    model_module = getattr(import_module("model.model"), CFG.model)
-    model = model_module().to(CFG.device)
+def main(args):
+    wandb.login()
+    
+    seed_everything(args.seed)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = device
+    print(f"PyTorch version:[{torch.__version__}]")
+    print(f"device:[{args.device}]")
+    print(f"GPU 이름: {torch.cuda.get_device_name(0)}")
 
-    CFG.system_logger.info('===== Review Model Architecture =====')
-    CFG.system_logger.info(f'{model} \n')
-
-    # get optimizer from optimizer.py
-    optimizer = create_optimizer(
-        CFG.optimizer,
-        params = model.parameters(),
-        lr = CFG.learning_rate,
-        **CFG.optimizer_params)
-
-    # get scheduler from scheduler.py
-    scheduler = create_scheduler(
-        CFG.scheduler,
-        optimizer = optimizer,
-        pct_start=0.1,
-        div_factor=1e5,
-        max_lr=0.0001,
-        epochs=CFG.epochs,
-        anneal_strategy='cos',
-        steps_per_epoch=len(train_dataloader))
-        # **CFG.scheduler_params)
-
-    # get criterion from criterion.py
-    criterion = create_criterion(
-        CFG.criterion,
-        **CFG.criterion_params)
-
-    return model, optimizer, scheduler, criterion
+    wandb.init(project='AI-Online-Competition', config=vars(args), entity="ohsuz", name=args.run_name)
+    trainer.run(args)
+    wandb.finish()
 
 
+if __name__ == "__main__":
+    args = parse_args(mode='train')
+    main(args)
+    
+    
+"""
 def train(model, optimizer, scheduler, criterion, train_dataloader, validation_dataloader):
     # Set metrics
     metric_fn = Hitrate
@@ -127,47 +107,5 @@ def train(model, optimizer, scheduler, criterion, train_dataloader, validation_d
         if trainer.validation_score > best_score:
             best_score = trainer.validation_score
             performance_recorder.weight_path = os.path.join(CFG.PERFORMANCE_RECORD_DIR, 'best.pt')
-            performance_recorder.save_weight()
-
-
-def main(args):
-    # check pytorch version & whether using cuda or not
-    print(f"PyTorch version:[{torch.__version__}]")
-    print(f"device:[{CFG.device}]")
-    print(f"GPU 이름: {torch.cuda.get_device_name(0)}")
-
-    parser = argparse.ArgumentParser(description="AIOnlineCompetition")
-    parser.add_argument("--config", type=str, default="base_config.json", help=f'train config file (defalut: base_config.json)')
-    args = parser.parse_args()
-
-    # parsing config from custom config.json file
-    get_train_config(CFG, os.path.join(CFG.PROJECT_DIR, 'configs', 'train', args.config))
-
-    # set every random seed
-    seed_everything(CFG.seed)
-
-    # Set train result directory
-    make_directory(CFG.PERFORMANCE_RECORD_DIR)
-
-    # Save config json file
-    with open(os.path.join(CFG.PROJECT_DIR, 'configs', 'train', args.config)) as f:
-        config = json.load(f)
-    save_json(os.path.join(CFG.PERFORMANCE_RECORD_DIR, 'train_config.json'), config)
-
-    # Set system logger
-    CFG.system_logger = get_logger(name='train',
-                                   file_path=os.path.join(CFG.PERFORMANCE_RECORD_DIR, 'train_log.log'))
-
-    # set pytorch dataset & loader
-    train_dataloader, validation_dataloader = get_data_utils()
-
-    # get model, optimizer, criterion(not for this task), and scheduler
-    model, optimizer, scheduler, criterion = get_model(train_dataloader)
-
-    # train
-    train(model, optimizer, scheduler, criterion, train_dataloader, validation_dataloader)
-
-
-if __name__ == "__main__":
-    args = parse_args(mode='train')
-    main(args)
+            performance_recorder.save_weight()    
+"""
