@@ -1,0 +1,15 @@
+{
+    "SEED": {
+        "seed": 42
+    },
+    "DATALOADER": {
+        "num_workers": 0,
+        "pin_memory": true,
+        "drop_last": false
+    },
+    "PREDICT": {
+        "train_serial": "20210624021348",
+        "model": "Summarizer",
+        "batch_size": 16
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "SEED": {
+        "seed": 42
+    },
+    "DATALOADER": {
+        "num_workers": 0,
+        "pin_memory": true,
+        "drop_last": false
+    },
+    "TRAIN": {
+        "epochs": 100,
+        "batch_size": 16,
+        "learning_rate": 0.0005,
+        "early_stopping_patience": 5,
+        "model": "Summarizer",
+        "optimizer": "Adam",
+        "optimizer_params": {
+            "weight_decay": 0.00001
+        },
+        "scheduler": "OneCycleLR",
+        "scheduler_params": {
+            "step_size": 5,
+            "gamma": 0.95
+        },
+        "criterion": "BCE",
+        "criterion_params": {
+            "reduction": "mean"
+        }
+    },
+    "PERFORMANCE_RECORD": {
+        "DEBUG": false,
+        "column_list": [
+            "train_serial",
+            "train_timestamp",
+            "model_str",
+            "optimizer_str",
+            "loss_function_str",
+            "metric_function_str",
+            "early_stopping_patience",
+            "batch_size",
+            "epoch",
+            "learning_rate",
+            "momentum",
+            "random_seed",
+            "epoch_index",
+            "train_loss",
+            "validation_loss",
+            "train_score",
+            "validation_score",
+            "elapsed_time"
+        ]
+    }
+}
