@@ -66,7 +66,7 @@ class CustomDataset(Dataset):
             for sen_token in result:
                 length_sum += len(sen_token)
                 
-            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * (len(result[i]) / length_sum)), add_special_tokens=True) for i in range(len(x))])))
+            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))])))
 
 
     def preprocessing(self, inputs, labels):
