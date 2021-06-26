@@ -11,6 +11,8 @@ from sklearn.model_selection import KFold
 
 from pprint import pprint
 
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 
 class CustomDataset(Dataset):
     def __init__(self, args, data, mode):
@@ -51,12 +53,28 @@ class CustomDataset(Dataset):
     def pad(self, data, pad_id, max_len):
         padded_data = data.map(lambda x : torch.cat([x, torch.tensor([pad_id] * (max_len - len(x)), dtype=torch.int64)]))
         return padded_data
+    
+    def tokenize(self, x):
+        result = [self.tokenizer.encode(x[i], add_special_tokens=True) for i in range(len(x))]
+        result_concat = list(chain.from_iterable(result))
+        
+        if len(result_concat) <= 512:
+            return torch.tensor(result_concat)
+            
+        else:
+            length_sum = 0
+            for sen_token in result:
+                length_sum += len(sen_token)
+                
+            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * (len(result[i]) / length_sum)), add_special_tokens=True) for i in range(len(x))])))
+
 
     def preprocessing(self, inputs, labels):
         print('Preprocessing ' + self.mode + ' dataset..')
 
         # Encoding original text
-        inputs['src'] = inputs['src'].map(lambda x: torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))]))))
+        inputs['src'] = inputs['src'].map(tokenize)
+        # inputs['src'] = inputs['src'].map(lambda x: torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))]))))
         inputs['clss'] = inputs.src.map(lambda x : torch.cat([torch.where(x == 2)[0], torch.tensor([len(x)])]))
         inputs['segs'] = inputs.clss.map(lambda x : torch.tensor(list(chain.from_iterable([[0] * (x[i+1] - x[i]) if i % 2 == 0 else [1] * (x[i+1] - x[i]) for i, val in enumerate(x[:-1])]))))
         inputs['clss'] = inputs.clss.map(lambda x : x[:-1])

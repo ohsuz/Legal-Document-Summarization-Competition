@@ -1,6 +1,7 @@
 """
 """
 import torch
+import transformers
 from torch import nn
 from sklearn.metrics import f1_score
 from transformers import AutoConfig, AutoModel
@@ -17,10 +18,11 @@ class Summarizer(nn.Module):
         self.hidden_dim = self.args.hidden_dim
         self.n_layers = self.args.n_layers
         
-        self.config = AutoConfig.from_pretrained("klue/bert-base")
-        self.encoder = AutoModel.from_config(self.config)
-        for param in self.encoder.parameters(): 
-            param.requires_grad = False
+        #self.encoder = transformers.BertModel.from_pretrained("klue/bert-base")
+        #self.config = AutoConfig.from_pretrained("klue/bert-base")
+        self.encoder = transformers.AutoModel.from_pretrained(args.model_name)
+        #for param in self.encoder.parameters(): 
+        #    param.requires_grad = False
         self.fc = nn.Linear(self.hidden_dim, 1)
         self.sigmoid = nn.Sigmoid()
 
@@ -34,5 +36,3 @@ class Summarizer(nn.Module):
         h = self.fc(sents_vec).squeeze(-1)
         sent_scores = self.sigmoid(h) * mask_clss.float()
         return sent_scores
-
-
