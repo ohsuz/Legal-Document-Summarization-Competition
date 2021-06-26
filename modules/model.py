@@ -19,6 +19,8 @@ class Summarizer(nn.Module):
         
         self.config = AutoConfig.from_pretrained("klue/bert-base")
         self.encoder = AutoModel.from_config(self.config)
+        for param in self.encoder.parameters(): 
+            param.requires_grad = False
         self.fc = nn.Linear(self.hidden_dim, 1)
         self.sigmoid = nn.Sigmoid()
 

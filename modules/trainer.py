@@ -1,6 +1,3 @@
-"""Trainer 클래스 정의
-"""
-
 import torch
 import wandb
 import os
@@ -21,10 +18,11 @@ def get_model(args):
     return model
 
 
-def update_params(loss, model, optimizer, args):
+def update_params(loss, model, optimizer, scheduler, args):
     loss.backward()
-    torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad)
+    #torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad)
     optimizer.step()
+    scheduler.step()
     optimizer.zero_grad()
     
     
@@ -54,7 +52,7 @@ def run(args):
     for epoch in range(args.n_epochs):
         print(f"Start Training: Epoch {epoch + 1}")
         
-        train_loss, train_score = train(train_loader, model, optimizer, args)
+        train_loss, train_score = train(train_loader, model, optimizer, scheduler, args)
         val_loss, val_score = validate(val_loader, model, args)
 
         wandb.log({"epoch": epoch, 
@@ -65,11 +63,15 @@ def run(args):
             best_score = val_score
             # torch.nn.DataParallel로 감싸진 경우 원래의 model을 가져옵니다.
             model_to_save = model.module if hasattr(model, 'module') else model
+            if args.train_kfold:
+                save_name = f'{args.run_name}_fold{args.fold}.pt'
+            else:
+                save_name = f'{args.run_name}.pt'
             save_checkpoint({
                 'epoch': epoch + 1,
                 'state_dict': model_to_save.state_dict(),
                 },
-                args.output_dir, f'{args.run_name}_{epoch}.pt',
+                args.model_dir, save_name,
             )
             early_stopping_counter = 0
         else:
@@ -78,14 +80,16 @@ def run(args):
                 print(f'EarlyStopping counter: {early_stopping_counter} out of {args.patience}')
                 break
 
+                """
         # scheduler
         if args.scheduler == 'plateau':
             scheduler.step(best_score)
         else:
             scheduler.step()
+            """
 
     
-def train(train_loader, model, optimizer, args):
+def train(train_loader, model, optimizer, scheduler, args):
     model.train()
     train_total_loss = 0
     pred_lst = []
@@ -107,7 +111,7 @@ def train(train_loader, model, optimizer, args):
         train_total_loss += loss
 
         # update parameters
-        update_params(loss, model, optimizer, args)
+        update_params(loss, model, optimizer, scheduler, args)
 
         pred_lst.extend(torch.topk(sent_score, 3, axis=1).indices.tolist())
         target_lst.extend(torch.where(target==1)[1].reshape(-1,3).tolist())
@@ -119,7 +123,6 @@ def train(train_loader, model, optimizer, args):
     train_score = get_metric(targets=target_lst, preds=pred_lst)
     msg = f'[Train] Loss: {train_mean_loss}, Score: {train_score}'
     print(msg)
-    #self.logger.info(msg) if self.logger else print(msg)
     return train_mean_loss, train_score
     
     
@@ -158,4 +161,4 @@ def validate(val_loader, model, args):
         print(msg)
         #self.logger.info(msg) if self.logger else print(msg)
         
-        return val_mean_loss, validation_score
+    return val_mean_loss, validation_score

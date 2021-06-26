@@ -104,11 +104,11 @@ def get_train_loaders(args):
     
     if args.train_kfold:
         kf = KFold(n_splits=5)
-        indices = kf.split(train_df)
-        train_idx, val_idx = indices[args.fold]
-        train_data = train_df[train_idx]
-        val_data = train_df[val_idx]
-        
+        for fold, (train_idx, val_idx) in enumerate(kf.split(train_df)):
+            if args.fold != fold:
+                continue
+            train_data = train_df.iloc[train_idx]
+            val_data = train_df.iloc[val_idx]        
     else:
         train_data, val_data = train_test_split(train_df, test_size=0.2, random_state=args.seed)
     

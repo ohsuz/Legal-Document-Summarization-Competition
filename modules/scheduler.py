@@ -12,7 +12,7 @@ def get_scheduler(optimizer, args):
     elif args.scheduler == 'cosine':
         scheduler = CosineAnnealingLR(optimizer, T_max=20, eta_min=0)
     elif args.scheduler == 'step':
-        scheduler = StepLR(optimizer)
+        scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
     elif args.scheduler == 'onecycle':
         scheduler = OneCycleLR(optimizer, step_size=5, gamma=0.95)
         
