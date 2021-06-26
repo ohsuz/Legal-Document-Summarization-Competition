@@ -2,10 +2,10 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from modules.dataset import get_test_loader
-from modules.utils import seed_everything, get_test_config
+from modules.utils import seed_everything
 from modules.trainer import get_model
 from args import parse_args
-from model.model import *
+from modules.model import *
 
 import torch
 from torch.utils.data import DataLoader
@@ -20,7 +20,7 @@ import argparse
 
 
 def load_model(args):
-    model_path = os.path.join(args.model_dir, args.model_name)
+    model_path = os.path.join(args.model_dir, args.test_model_name)
     load_state = torch.load(model_path)
     model = get_model(args)
 
@@ -46,12 +46,12 @@ def main(args):
     pred_lst = []
     
     with torch.no_grad():
-        for batch_index, data in enumerate(test_dataloader):
-            src = data[0].to(CFG.device)
-            clss = data[1].to(CFG.device)
-            segs = data[2].to(CFG.device)
-            mask = data[3].to(CFG.device)
-            mask_clss = data[4].to(CFG.device)
+        for batch_index, data in enumerate(test_loader):
+            src = data[0].to(args.device)
+            clss = data[1].to(args.device)
+            segs = data[2].to(args.device)
+            mask = data[3].to(args.device)
+            mask_clss = data[4].to(args.device)
 
             sent_score = model(src, segs, clss, mask, mask_clss)
             pred_lst.extend(torch.topk(sent_score, 3, axis=1).indices.tolist())

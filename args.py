@@ -16,8 +16,8 @@ def parse_args(mode='train'):
     # Name Setting
     parser.add_argument('--train_file_name', default='train.json', type=str, help='train file name')
     parser.add_argument('--test_file_name', default='test.json', type=str, help='test file name')
-    parser.add_argument('--output_name', default='model.pt', type=str, help='model file name used for inference')
-    parser.add_argument('--submission_name', default='sample_submission.json', type=str, help='submission file name')
+    parser.add_argument('--test_model_name', default='suz.pt', type=str, help='test file name')
+    parser.add_argument('--submission_name', default='0626_submission.json', type=str, help='submission file name')
     parser.add_argument('--run_name', default='suz', type=str, help='wandb run name')    
     
     # Model Setting
