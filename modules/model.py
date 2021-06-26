@@ -1,5 +1,3 @@
-"""
-"""
 import torch
 import transformers
 from torch import nn
@@ -18,8 +16,6 @@ class Summarizer(nn.Module):
         self.hidden_dim = self.args.hidden_dim
         self.n_layers = self.args.n_layers
         
-        #self.encoder = transformers.BertModel.from_pretrained("klue/bert-base")
-        #self.config = AutoConfig.from_pretrained("klue/bert-base")
         self.encoder = transformers.AutoModel.from_pretrained(args.model_name)
         #for param in self.encoder.parameters(): 
         #    param.requires_grad = False

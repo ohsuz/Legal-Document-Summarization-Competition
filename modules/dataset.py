@@ -73,7 +73,7 @@ class CustomDataset(Dataset):
         print('Preprocessing ' + self.mode + ' dataset..')
 
         # Encoding original text
-        inputs['src'] = inputs['src'].map(tokenize)
+        inputs['src'] = inputs['src'].map(self.tokenize)
         # inputs['src'] = inputs['src'].map(lambda x: torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))]))))
         inputs['clss'] = inputs.src.map(lambda x : torch.cat([torch.where(x == 2)[0], torch.tensor([len(x)])]))
         inputs['segs'] = inputs.clss.map(lambda x : torch.tensor(list(chain.from_iterable([[0] * (x[i+1] - x[i]) if i % 2 == 0 else [1] * (x[i+1] - x[i]) for i, val in enumerate(x[:-1])]))))
@@ -128,7 +128,7 @@ def get_train_loaders(args):
             train_data = train_df.iloc[train_idx]
             val_data = train_df.iloc[val_idx]        
     else:
-        train_data, val_data = train_test_split(train_df, test_size=0.2, random_state=args.seed)
+        train_data, val_data = train_test_split(train_df, test_size=0.1, random_state=args.seed)
     
     # get train & valid dataset from dataset.py
     train_dataset = CustomDataset(args, train_data, mode='train')

@@ -7,7 +7,7 @@ from .scheduler import get_scheduler
 from .criterion import get_criterion
 from .metric import get_metric
 from .model import Summarizer
-
+from torch.optim.lr_scheduler import OneCycleLR
 
 def get_model(args):
     model = None
@@ -44,7 +44,8 @@ def run(args):
     
     model = get_model(args)
     optimizer = get_optimizer(model, args)
-    scheduler = get_scheduler(optimizer, args)
+    #scheduler = get_scheduler(optimizer, args)
+    scheduler = OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e5, max_lr=0.0001, epochs=1, steps_per_epoch=len(train_loader))
     
     best_score = -1
     early_stopping_counter = 0
@@ -117,9 +118,9 @@ def train(train_loader, model, optimizer, scheduler, args):
         target_lst.extend(torch.where(target==1)[1].reshape(-1,3).tolist())
 
         if step % args.log_steps == 0:
-            print(f"step {step}, loss: {loss.item()}")
+            print(f'Step {step} || Train loss: {train_total_loss / ((step+1) * args.batch_size)}')
 
-    train_mean_loss = train_total_loss / len(train_loader)
+    train_mean_loss = train_total_loss / (len(train_loader)*args.batch_size)
     train_score = get_metric(targets=target_lst, preds=pred_lst)
     msg = f'[Train] Loss: {train_mean_loss}, Score: {train_score}'
     print(msg)
@@ -155,7 +156,7 @@ def validate(val_loader, model, args):
             pred_lst.extend(torch.topk(sent_score, 3, axis=1).indices.tolist())
             target_lst.extend(torch.where(target==1)[1].reshape(-1,3).tolist())
 
-        val_mean_loss = val_total_loss / len(val_loader)
+        val_mean_loss = val_total_loss / (len(val_loader)*args.batch_size)
         validation_score = get_metric(targets=target_lst, preds=pred_lst)
         msg = f'[Validation] Loss: {val_mean_loss}, Score: {validation_score}'
         print(msg)

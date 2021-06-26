@@ -14,6 +14,7 @@ def get_scheduler(optimizer, args):
     elif args.scheduler == 'step':
         scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
     elif args.scheduler == 'onecycle':
-        scheduler = OneCycleLR(optimizer, step_size=5, gamma=0.95)
+        #scheduler = OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e5, max_lr=0.0001, epochs=1, steps_per_epoch=len(train_dataloader))
+        scheduler = OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e5, max_lr=0.0001)
         
     return scheduler
