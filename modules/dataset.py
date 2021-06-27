@@ -10,8 +10,31 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 
 from pprint import pprint
+import random
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
+
+def make_word_index_dict(tokens):
+    word_index = {}
+    word = ''
+    index = []
+    
+    for i, t in enumerate(tokens):
+        if (t == '[CLS]') or (t == '[SEP]'):
+            continue
+        if not t.startswith('##'):
+            if word:
+                word_index[word.replace('##', '')] = index
+                word = ''
+                index = []
+            word += t
+            index.append(i)
+        if t.startswith('##'):
+            word += t
+            index.append(i)
+                
+    return word_index
 
 
 class CustomDataset(Dataset):
@@ -57,23 +80,57 @@ class CustomDataset(Dataset):
     def tokenize(self, x):
         result = [self.tokenizer.encode(x[i], add_special_tokens=True) for i in range(len(x))]
         result_concat = list(chain.from_iterable(result))
-        
+
         if len(result_concat) <= 512:
             return torch.tensor(result_concat)
-            
-        else:
-            length_sum = 0
-            for sen_token in result:
-                length_sum += len(sen_token)
-                
-            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * (len(result[i]) / length_sum) - 1), add_special_tokens=True, truncation=True) for i in range(len(x))])))
 
+        else:
+            #return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * len(result[i]) / len(result_concat)) if int(512 * len(result[i]) / len(result_concat)) >= 3 else 3, add_special_tokens=True) for i in range(len(x))])))
+            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True, truncation=True) for i in range(len(x))])))
+
+    def mask_to_random_tokens(self, inputs, k=2):
+        mask_token_id = self.tokenizer.mask_token_id
+
+        for src in inputs:
+            index_to_mask = []
+
+            tokens = self.tokenizer.convert_ids_to_tokens(src)
+            word_dict = make_word_index_dict(tokens)
+            candidates = [key for key in list(word_dict.keys()) if len(key) > 2]
+
+            for i in range(k):
+                rand_num = random.randint(0, len(candidates)-1)
+                index_to_mask.extend(word_dict[candidates[rand_num]])
+
+            for idx in index_to_mask:
+                src[idx] = mask_token_id
+
+        return inputs
+    
+    def mask_to_long_tokens(self, inputs, k=2):
+        mask_token_id = self.tokenizer.mask_token_id
+
+        for src in inputs:
+            index_to_mask = []
+
+            tokens = self.tokenizer.convert_ids_to_tokens(src)
+            word_dict = make_word_index_dict(tokens)
+            candidates = sorted(list(word_dict.keys()), reverse=True, key=len)
+
+            for i in range(k):
+                index_to_mask.extend(word_dict[candidates[i]])
+
+            for idx in index_to_mask:
+                src[idx] = mask_token_id
+
+        return inputs
 
     def preprocessing(self, inputs, labels):
         print('Preprocessing ' + self.mode + ' dataset..')
 
         # Encoding original text
         inputs['src'] = inputs['src'].map(self.tokenize)
+        inputs['src'] = self.mask_to_long_tokens(inputs['src'])
         # inputs['src'] = inputs['src'].map(lambda x: torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))]))))
         inputs['clss'] = inputs.src.map(lambda x : torch.cat([torch.where(x == 2)[0], torch.tensor([len(x)])]))
         inputs['segs'] = inputs.clss.map(lambda x : torch.tensor(list(chain.from_iterable([[0] * (x[i+1] - x[i]) if i % 2 == 0 else [1] * (x[i+1] - x[i]) for i, val in enumerate(x[:-1])]))))

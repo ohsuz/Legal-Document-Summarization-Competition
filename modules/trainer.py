@@ -21,6 +21,7 @@ def get_model(args):
 def update_params(loss, model, optimizer, scheduler, args):
     loss.backward()
     #torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad)
+    scheduler.step()
     optimizer.step()
     optimizer.zero_grad()
     
@@ -44,7 +45,7 @@ def run(args):
     model = get_model(args)
     optimizer = get_optimizer(model, args)
     #scheduler = get_scheduler(optimizer, args)
-    scheduler = OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e5, max_lr=0.0001, epochs=1, steps_per_epoch=len(train_loader))
+    scheduler = OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e5, max_lr=0.0001, epochs=args.n_epochs, steps_per_epoch=len(train_loader))
     
     best_score = -1
     early_stopping_counter = 0
@@ -80,12 +81,7 @@ def run(args):
                 print(f'EarlyStopping counter: {early_stopping_counter} out of {args.patience}')
                 break
 
-        # scheduler
-        if args.scheduler == 'plateau':
-            scheduler.step(best_score)
-        else:
-            scheduler.step()
-
+        scheduler.step()
     
 def train(train_loader, model, optimizer, scheduler, args):
     model.train()
