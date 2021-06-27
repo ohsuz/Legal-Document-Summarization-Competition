@@ -66,7 +66,7 @@ class CustomDataset(Dataset):
             for sen_token in result:
                 length_sum += len(sen_token)
                 
-            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))])))
+            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * (len(result[i]) / length_sum) - 1), add_special_tokens=True, truncation=True) for i in range(len(x))])))
 
 
     def preprocessing(self, inputs, labels):
@@ -89,7 +89,6 @@ class CustomDataset(Dataset):
         inputs['mask_clss'] = inputs.clss.map(lambda x: ~ (x == -1))
 
         # Binarize label {Extracted sentence : 1, Not Extracted sentence : 0}
-
         if self.mode != 'test':
             labels = labels['trg'].map(lambda  x: torch.tensor([1 if i in x else 0 for i in range(max_label_len)]))
 

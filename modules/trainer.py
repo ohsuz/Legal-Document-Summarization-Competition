@@ -22,7 +22,6 @@ def update_params(loss, model, optimizer, scheduler, args):
     loss.backward()
     #torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad)
     optimizer.step()
-    scheduler.step()
     optimizer.zero_grad()
     
     
@@ -81,13 +80,11 @@ def run(args):
                 print(f'EarlyStopping counter: {early_stopping_counter} out of {args.patience}')
                 break
 
-                """
         # scheduler
         if args.scheduler == 'plateau':
             scheduler.step(best_score)
         else:
             scheduler.step()
-            """
 
     
 def train(train_loader, model, optimizer, scheduler, args):

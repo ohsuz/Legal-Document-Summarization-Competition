@@ -17,8 +17,6 @@ class Summarizer(nn.Module):
         self.n_layers = self.args.n_layers
         
         self.encoder = transformers.AutoModel.from_pretrained(args.model_name)
-        #for param in self.encoder.parameters(): 
-        #    param.requires_grad = False
         self.fc = nn.Linear(self.hidden_dim, 1)
         self.sigmoid = nn.Sigmoid()
 

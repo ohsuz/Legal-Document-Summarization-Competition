@@ -34,7 +34,7 @@ def parse_args(mode='train'):
     parser.add_argument('--criterion', default='bce', type=str, help='criterion name')
     
     # Trainer Setting
-    parser.add_argument('--n_epochs', default=1, type=int, help='number of epochs')
+    parser.add_argument('--n_epochs', default=2, type=int, help='number of epochs')
     parser.add_argument('--batch_size', default=32, type=int, help='batch size')
     parser.add_argument('--lr', default=5e-4, type=float, help='learning rate')
     parser.add_argument('--clip_grad', default=10, type=int, help='clip grad')
