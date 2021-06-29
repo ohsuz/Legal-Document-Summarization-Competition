@@ -47,9 +47,9 @@ class CustomDataset(Dataset):
 
     def data_loader(self):
         print('Loading ' + self.mode + ' dataset..')
-        if os.path.isfile(os.path.join(self.data_dir, self.mode + '_X.pt')):
-            inputs = torch.load(os.path.join(self.data_dir, self.mode + '_X.pt'))
-            labels = torch.load(os.path.join(self.data_dir, self.mode + '_Y.pt'))
+        if os.path.isfile(os.path.join(self.data_dir, self.mode + '_XXX.pt')):
+            inputs = torch.load(os.path.join(self.data_dir, self.mode + '_XX.pt'))
+            labels = torch.load(os.path.join(self.data_dir, self.mode + '_YY.pt'))
 
         else:
             df = self.data
@@ -65,8 +65,8 @@ class CustomDataset(Dataset):
             print("preprocessing")
 
             # Save data
-            torch.save(inputs, os.path.join(self.data_dir, self.mode + '_X.pt'))
-            torch.save(labels, os.path.join(self.data_dir, self.mode + '_Y.pt'))
+            #torch.save(inputs, os.path.join(self.data_dir, self.mode + '_XX.pt'))
+            #torch.save(labels, os.path.join(self.data_dir, self.mode + '_YY.pt'))
 
         inputs = inputs.values
         labels = labels.values
@@ -85,9 +85,8 @@ class CustomDataset(Dataset):
             return torch.tensor(result_concat)
 
         else:
-            #return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * len(result[i]) / len(result_concat)) if int(512 * len(result[i]) / len(result_concat)) >= 3 else 3, add_special_tokens=True) for i in range(len(x))])))
-            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True, truncation=True) for i in range(len(x))])))
-
+            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * len(result[i]) / len(result_concat)) if int(512 * len(result[i]) / len(result_concat)) >= 3 else 3, add_special_tokens=True) for i in range(len(x))])))
+        
     def mask_to_random_tokens(self, inputs, k=2):
         mask_token_id = self.tokenizer.mask_token_id
 
@@ -130,7 +129,9 @@ class CustomDataset(Dataset):
 
         # Encoding original text
         inputs['src'] = inputs['src'].map(self.tokenize)
-        inputs['src'] = self.mask_to_long_tokens(inputs['src'])
+        if self.mode == 'train':
+            print('mask!')
+            inputs['src'] = self.mask_to_random_tokens(inputs['src'])
         # inputs['src'] = inputs['src'].map(lambda x: torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))]))))
         inputs['clss'] = inputs.src.map(lambda x : torch.cat([torch.where(x == 2)[0], torch.tensor([len(x)])]))
         inputs['segs'] = inputs.clss.map(lambda x : torch.tensor(list(chain.from_iterable([[0] * (x[i+1] - x[i]) if i % 2 == 0 else [1] * (x[i+1] - x[i]) for i, val in enumerate(x[:-1])]))))
@@ -151,10 +152,8 @@ class CustomDataset(Dataset):
 
         return inputs, labels
 
-
     def __len__(self):
         return len(self.inputs)
-
 
     def __getitem__(self, index):
         if self.mode == 'test':

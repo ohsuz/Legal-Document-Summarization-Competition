@@ -9,9 +9,9 @@ def parse_args(mode='train'):
     parser.add_argument('--device', default='cpu', type=str, help='cpu or gpu')
 
     # Directory Setting
-    parser.add_argument('--data_dir', default='/opt/ml/Legal-Document-Summarization/data', type=str, help='data directory')
-    parser.add_argument('--model_dir', default='/opt/ml/Legal-Document-Summarization/model', type=str, help='model directory')
-    parser.add_argument('--submission_dir', default='/opt/ml/Legal-Document-Summarization/submission', type=str, help='submission directory')
+    parser.add_argument('--data_dir', default='/content/drive/MyDrive/Legal-Document-Summarization-Competition/data', type=str, help='data directory')
+    parser.add_argument('--model_dir', default='/content/drive/MyDrive/Legal-Document-Summarization-Competition/model', type=str, help='model directory')
+    parser.add_argument('--submission_dir', default='/content/drive/MyDrive/Legal-Document-Summarization-Competition/submission', type=str, help='submission directory')
                     
     # Name Setting
     parser.add_argument('--train_file_name', default='train.json', type=str, help='train file name')
