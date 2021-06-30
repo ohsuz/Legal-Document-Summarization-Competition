@@ -85,7 +85,7 @@ class CustomDataset(Dataset):
             return torch.tensor(result_concat)
 
         else:
-            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * len(result[i]) / len(result_concat)) if int(512 * len(result[i]) / len(result_concat)) >= 3 else 3, add_special_tokens=True) for i in range(len(x))])))
+            return torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 * len(result[i]) / len(result_concat)) if int(512 * len(result[i]) / len(result_concat)) >= 3 else 3, add_special_tokens=True, truncation=True) for i in range(len(x))])))
         
     def mask_to_random_tokens(self, inputs, k=2):
         mask_token_id = self.tokenizer.mask_token_id
@@ -174,6 +174,18 @@ def get_train_loaders(args):
     with open(os.path.join(args.data_dir, "train.json"), "r", encoding="utf-8-sig") as f:
         data = pd.read_json(f) 
     train_df = pd.DataFrame(data)
+
+    if args.partial_dataset != 'None':
+        small_idx, large_idx = [], []
+        for idx, article in enumerate(list(train_df['article_original'])):
+            if len(article) > 6:
+                large_idx.append(idx)
+            else:
+                small_idx.append(idx)
+        if args.partial_dataset == 'small':
+            train_df = train_df.iloc[small_idx, :].reset_index()
+        if args.partial_dataset == 'large':
+            train_df = train_df.iloc[large_idx, :].reset_index()
     
     if args.train_kfold:
         kf = KFold(n_splits=5)
