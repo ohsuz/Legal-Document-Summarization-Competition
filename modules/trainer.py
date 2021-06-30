@@ -88,7 +88,9 @@ def train(train_loader, model, optimizer, scheduler, args):
     train_total_loss = 0
     pred_lst = []
     target_lst = []
-    
+
+    model.zero_grad()
+
     for step, (data, target) in enumerate(train_loader):
         src = data[0].to(args.device)
         clss = data[1].to(args.device)
@@ -103,15 +105,24 @@ def train(train_loader, model, optimizer, scheduler, args):
         loss = get_criterion(sent_score, target, args)
         loss = (loss * mask_clss.float()).sum()
         train_total_loss += loss
+        loss = loss / args.accum_steps
+        loss.backward()
 
         # update parameters
-        update_params(loss, model, optimizer, scheduler, args)
+        # update_params(loss, model, optimizer, scheduler, args)
 
         pred_lst.extend(torch.topk(sent_score, 3, axis=1).indices.tolist())
         target_lst.extend(torch.where(target==1)[1].reshape(-1,3).tolist())
 
+        if ((step+1) % args.accum_steps == 0) or (step == len(train_loader)-1):
+            torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad)
+            optimizer.step()
+            optimizer.zero_grad()
+
         if step % args.log_steps == 0:
             print(f'Step {step} || Train loss: {train_total_loss / ((step+1) * args.batch_size)}')
+
+        scheduler.step()
 
     train_mean_loss = train_total_loss / (len(train_loader)*args.batch_size)
     train_score = get_metric(targets=target_lst, preds=pred_lst)

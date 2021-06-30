@@ -95,13 +95,18 @@ class CustomDataset(Dataset):
 
             tokens = self.tokenizer.convert_ids_to_tokens(src)
             word_dict = make_word_index_dict(tokens)
-            candidates = [key for key in list(word_dict.keys()) if len(key) > 2]
+            candidates = [key for key in list(word_dict.keys()) if (3 < len(key)) and (len(key)<=6)]
 
-            for i in range(k):
-                rand_num = random.randint(0, len(candidates)-1)
-                index_to_mask.extend(word_dict[candidates[rand_num]])
+            if len(candidates) >= 2:
+                for i in range(k):
+                    rand_num = random.randint(0, len(candidates)-1)
+                    index_to_mask.extend(word_dict[candidates[rand_num]])
+            else:
+                for i in range(len(candidates)):
+                    index_to_mask.extend(word_dict[candidates[i]])
 
             for idx in index_to_mask:
+                #src[idx] = self.tokenizer.encode('키워드')[0]
                 src[idx] = mask_token_id
 
         return inputs
@@ -131,7 +136,7 @@ class CustomDataset(Dataset):
         inputs['src'] = inputs['src'].map(self.tokenize)
         if self.mode == 'train':
             print('mask!')
-            inputs['src'] = self.mask_to_random_tokens(inputs['src'])
+            #inputs['src'] = self.mask_to_random_tokens(inputs['src'])
         # inputs['src'] = inputs['src'].map(lambda x: torch.tensor(list(chain.from_iterable([self.tokenizer.encode(x[i], max_length = int(512 / len(x)), add_special_tokens=True) for i in range(len(x))]))))
         inputs['clss'] = inputs.src.map(lambda x : torch.cat([torch.where(x == 2)[0], torch.tensor([len(x)])]))
         inputs['segs'] = inputs.clss.map(lambda x : torch.tensor(list(chain.from_iterable([[0] * (x[i+1] - x[i]) if i % 2 == 0 else [1] * (x[i+1] - x[i]) for i, val in enumerate(x[:-1])]))))
@@ -176,6 +181,7 @@ def get_train_loaders(args):
     train_df = pd.DataFrame(data)
 
     if args.partial_dataset != 'None':
+        print(args.partial_dataset)
         small_idx, large_idx = [], []
         for idx, article in enumerate(list(train_df['article_original'])):
             if len(article) > 6:
