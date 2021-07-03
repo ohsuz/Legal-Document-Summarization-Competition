@@ -9,6 +9,7 @@ from .metric import get_metric
 from .model import Summarizer
 from torch.optim.lr_scheduler import OneCycleLR
 
+
 def get_model(args):
     model = None
     if args.model == 'base': model = Summarizer(args)
@@ -18,14 +19,6 @@ def get_model(args):
     return model
 
 
-def update_params(loss, model, optimizer, scheduler, args):
-    loss.backward()
-    #torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad)
-    scheduler.step()
-    optimizer.step()
-    optimizer.zero_grad()
-    
-    
 def save_checkpoint(state, model_dir, model_filename):
     print('Saving model ...')
     if not os.path.exists(model_dir):
@@ -44,7 +37,6 @@ def run(args):
     
     model = get_model(args)
     optimizer = get_optimizer(model, args)
-    #scheduler = get_scheduler(optimizer, args)
     scheduler = OneCycleLR(optimizer=optimizer, pct_start=0.1, div_factor=1e5, max_lr=0.0001, epochs=args.n_epochs, steps_per_epoch=len(train_loader))
     
     best_score = -1
@@ -62,7 +54,6 @@ def run(args):
         
         if val_score > best_score:
             best_score = val_score
-            # torch.nn.DataParallel로 감싸진 경우 원래의 model을 가져옵니다.
             model_to_save = model.module if hasattr(model, 'module') else model
             if args.train_kfold:
                 save_name = f'{args.run_name}_fold{args.fold}.pt'
@@ -82,7 +73,8 @@ def run(args):
                 break
 
         scheduler.step()
-    
+
+
 def train(train_loader, model, optimizer, scheduler, args):
     model.train()
     train_total_loss = 0
@@ -107,9 +99,6 @@ def train(train_loader, model, optimizer, scheduler, args):
         train_total_loss += loss
         loss = loss / args.accum_steps
         loss.backward()
-
-        # update parameters
-        # update_params(loss, model, optimizer, scheduler, args)
 
         pred_lst.extend(torch.topk(sent_score, 3, axis=1).indices.tolist())
         target_lst.extend(torch.where(target==1)[1].reshape(-1,3).tolist())
@@ -164,6 +153,5 @@ def validate(val_loader, model, args):
         validation_score = get_metric(targets=target_lst, preds=pred_lst)
         msg = f'[Validation] Loss: {val_mean_loss}, Score: {validation_score}'
         print(msg)
-        #self.logger.info(msg) if self.logger else print(msg)
         
     return val_mean_loss, validation_score

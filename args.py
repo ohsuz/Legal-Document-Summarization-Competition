@@ -38,7 +38,7 @@ def parse_args(mode='train'):
     parser.add_argument('--batch_size', default=16, type=int, help='batch size')
     parser.add_argument('--lr', default=5e-4, type=float, help='learning rate')
     parser.add_argument('--accum_steps', default=4, type=int, help='accumulation steps') # 16 * 4 = 64 batch size의 효과..?
-    parser.add_argument('--clip_grad', default=5, type=int, help='clip grad')
+    parser.add_argument('--clip_grad', default=1, type=int, help='clip grad')
     parser.add_argument('--patience', default=5, type=int, help='for early stopping')
 
     # ETC
