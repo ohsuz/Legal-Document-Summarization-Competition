@@ -1,7 +1,28 @@
-# Legal-Document-Summarization
-2021 AI Online Competition
+### 🌳 Tree
+```bash
+Legal-Document-Summarization-Competition
+├── modules
+│   ├── criterion.py
+│   ├── dataset.py
+│   ├── metric.py
+│   ├── model.py
+│   ├── optimizer.py
+│   ├── scheduler.py
+│   ├── trainer.py
+│   └── utils.py
+├── notebooks
+│   ├── [analysis] data length distribution.ipynb
+│   ├── [implementation] Advanced Hard Voting.ipynb
+│   ├── [implementation] Span masking.ipynb
+│   └── [practice] dataset.ipynb
+├── args.py
+├── ensemble.py
+├── inference.py
+└── train.py
+```
 
+### 🚅 Train
+```!python3 train.py```
 
-### 0623-0625
-- 베이스라인 코드 이해
-- 본인의 스타일에 맞게 베이스라인 코드 전체 리팩토링
+### 💯 Inference
+```!python3 inference.py```
